@@ -67,7 +67,6 @@ Through the innovative combination of artificial intelligence, the silver-haired
 - OLED SSD1306
 - ESP8266
 - NodeMCU
-
 ![required_hardware_2][9]
 
 ### Required Software
