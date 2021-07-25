@@ -91,7 +91,7 @@ Through the innovative combination of artificial intelligence, the silver-haired
 Here take Himax WE-I Plus with ARC GNU Toolchain 2019.03 for example to show how to run this application.
 1. Open your serial terminal such as Tera-Term on PC, and configure it to right COM port and 115200bps.
 2. Interact using Himax WE-I Plus and serial port terminal.
-3. After ARC connect with the laptop via USB,
+3. After ARC connect with the laptop via USB,select the function you want to show in Life-Assistant-for-the-Senior-Citizen/src/WE-I_plus/
 
 
 
