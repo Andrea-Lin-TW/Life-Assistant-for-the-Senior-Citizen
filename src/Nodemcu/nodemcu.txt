@@ -1,0 +1,199 @@
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <WiFiClient.h>
+#include <TridentTD_LineNotify.h>
+#include <ESP_Line_Notify.h>
+#include <String.h>
+
+#define LINE_TOKEN  "gfK6i4TuLgHTeLGbmcpjxaLBnZhlAiDweiOnv4oc4V6"
+char* ssid     = "HTC Portable Hotspot 9E02";
+char* pass = "0988388416";  // your network password
+int port = 8080;
+
+WiFiServer server(port);
+
+/* Define the LineNotifyClient object */
+LineNotiFyClient lineclient;
+
+/* Function to print the sending result via Serial (optional) */
+void printRessult(LineNotifySendingResult result);
+
+/* The sending callback function (optional) */
+void sendingCallback(LineNotifySendingResult result);
+
+int heartbeat_timer = 5000;      //heatbeat timer, unit:msec
+int raw_timer = 10000;         //rawdata timer, unit:msec
+char mqttServer[]     = "broker.hivemq.com";
+const char clientId[]       = "kimy";
+
+char pubHBTopic[] = "glass/heartbeat";
+char pubHBPayload[]="hb";
+char pubTopic[] = "glass/line";
+char pubPayload[10];
+char subTopic[] ="glass/reminder_3";
+
+long previousHBTime = 0;          // previous HB previous time
+long previousRawTime = 0;         // previous Raw previous time
+
+
+WiFiClient wifiClient;
+PubSubClient client(wifiClient);
+
+bool reminder = false;
+char reminder_message[64];
+
+
+//MQTT callback function
+void callback(char* topic, byte* payload, unsigned int len) {
+  char *p = (char*)payload;
+
+  
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i=0;i<len;i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
+  reminder  = true;
+  memcpy(reminder_message, (char *)p, len);
+    Serial.println(reminder_message);
+  //check LED topic or not
+}
+
+
+//Send heartbeat msg task
+void hbTask() {
+  if(millis() - previousHBTime > heartbeat_timer){  
+    previousHBTime = millis(); 
+    client.publish(pubHBTopic, pubHBPayload);
+    Serial.println("Publish HB Topic...");
+  }
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.println("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect(clientId)) {
+      Serial.println("connected");
+       // ... and resubscribe
+      client.subscribe(subTopic);
+      Serial.print("Subscribe LED topic is:");
+      Serial.println(subTopic);
+      
+      // Once connected, publish an announcement...
+      client.publish(pubHBTopic, pubHBPayload);
+      Serial.print("Public HB payload is:");
+      Serial.println(pubHBPayload);
+      
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+void setup()
+{
+    Serial.begin(9600);
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(150);
+  
+    Serial.println("Attempting to connect to SSID: ");
+    //status = WiFi.begin(ssid, pass);     
+
+    WiFi.begin(ssid, pass);
+    while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+/*
+  Serial.println("");
+   while (status != WL_CONNECTED) {
+       Serial.print(".");
+       status = WiFi.begin(ssid, pass);
+       delay(500);
+   }*/
+    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+   Serial.println("");
+   Serial.println("WiFi connected");
+    // wait 10 seconds for connection:
+    //delay(10000);
+ 
+   client.setServer(mqttServer, 1883);
+   client.setCallback(callback);
+   // Allow the hardware to sort itself out
+   delay(1500);
+   // initialize digital pin 13 as an output.
+    //pinMode(13, OUTPUT);
+    Serial.println("");
+   Serial.print("Connected to ");
+   Serial.println(ssid);
+
+   Serial.print("IP address: ");
+   Serial.println(WiFi.localIP()); 
+   server.begin();
+}
+
+void loop()
+{
+    String esp8266msg;
+    char c;
+    //unsigned long startTime = millis();
+
+
+   
+    
+    if (!client.connected()) {
+      reconnect();
+    }
+    client.loop();
+  
+    //run timer task
+    hbTask();
+    //rawTask();
+    WiFiClient wl_client = server.available();
+
+    if(wl_client.connected()){
+       unsigned long startTime = millis();
+       Serial.println("ESP8266 Client Connected");
+       digitalWrite(LED_BUILTIN , LOW);
+       while (millis() - startTime < 20000){
+         //hbTask();
+         Serial.println(".");
+         if(wl_client.available()){
+           do{
+              c = wl_client.read(); 
+              esp8266msg += c;
+              //Serial.print(c);
+           }while (wl_client.available() >0);// && !input_closed);
+           Serial.println(esp8266msg);
+            LINE.setToken(LINE_TOKEN);
+          String hi= "媽跌倒了!!";
+          // 先換行再顯示
+          LINE.notify(hi);
+           //lineTask();
+         } // end of input available()
+         delay(200);
+         if (reminder){
+              wl_client.write(reminder_message,strlen(reminder_message));
+              reminder = false;
+              Serial.print("send reminder: ");
+              Serial.println(reminder_message);
+              delay(200);
+              wl_client.flush();
+            }
+       }
+       delay(200);
+       wl_client.stop();
+       Serial.println("Client disconnected");
+       digitalWrite(LED_BUILTIN, HIGH);
+    } 
+}

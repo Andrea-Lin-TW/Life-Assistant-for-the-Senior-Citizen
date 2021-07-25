@@ -1,0 +1,12 @@
+
+c:/arc_gnu/bin/../lib/gcc/arc-elf32/10.2.0/../../../../arc-elf32/bin/ld.exe: ./../../../tensorflow/lite/experimental/microfrontend/lib/fft.o: in function `FftCompute':
+fft.cc:(.text.FftCompute+0x62): undefined reference to `kiss_fftr'
+c:/arc_gnu/bin/../lib/gcc/arc-elf32/10.2.0/../../../../arc-elf32/bin/ld.exe: fft.cc:(.text.FftCompute+0x62): undefined reference to `kiss_fftr'
+c:/arc_gnu/bin/../lib/gcc/arc-elf32/10.2.0/../../../../arc-elf32/bin/ld.exe: ./../../../tensorflow/lite/experimental/microfrontend/lib/fft_util.o: in function `FftPopulateState':
+fft_util.cc:(.text.FftPopulateState+0x48): undefined reference to `kiss_fftr_alloc'
+c:/arc_gnu/bin/../lib/gcc/arc-elf32/10.2.0/../../../../arc-elf32/bin/ld.exe: fft_util.cc:(.text.FftPopulateState+0x48): undefined reference to `kiss_fftr_alloc'
+c:/arc_gnu/bin/../lib/gcc/arc-elf32/10.2.0/../../../../arc-elf32/bin/ld.exe: fft_util.cc:(.text.FftPopulateState+0x8a): undefined reference to `kiss_fftr_alloc'
+c:/arc_gnu/bin/../lib/gcc/arc-elf32/10.2.0/../../../../arc-elf32/bin/ld.exe: fft_util.cc:(.text.FftPopulateState+0x8a): undefined reference to `kiss_fftr_alloc'
+collect2.exe: error: ld returned 1 exit status
+Makefile:345: recipe for target 'output.elf' failed
+make: *** [output.elf] Error 1
